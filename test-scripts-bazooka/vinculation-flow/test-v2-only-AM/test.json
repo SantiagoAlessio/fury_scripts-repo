@@ -5,13 +5,12 @@
             "rejectUnauthorized": false
         },
         "http": {
-            "pool": 1200,
-            "timeout": 1000
+            "timeout": 60
         },
         "phases": [
             {
                 "name": "first step",
-                "duration": 10,
+                "duration": 2,
                 "arrivalRate": 1
             }
         ],
@@ -27,11 +26,11 @@
         "processor": "./functions.js"
     },
     "scenarios":[{
-        "name":"flow V1 only AM",
+        "name":"flow V2 only AM",
         "flow":[
             {
                 "post": {
-                    "url": "/beta/wallet_agreement?client.id={{ ClientId }}",
+                    "url": "/wallet_agreement?client.id={{ ClientId }}",
                     "json":{
                         "return_uri":"{{ returnUri }}",
                         "status":"state"
@@ -46,12 +45,12 @@
             },
             {
                 "get":{
-                    "url": "/beta/wallet_agreement/{{agreementId}}"
+                    "url": "/wallet_agreement/{{agreementId}}"
                 }
             },
             {
                 "put":{
-                    "url": "/beta/wallet_agreement/{{agreementId}}",
+                    "url": "/wallet_agreement/{{agreementId}}",
                     "json":{
                         "status":"WAITING_USER_CONFIRMATION"
                     }
@@ -59,7 +58,7 @@
             },
             {
                 "post":{
-                    "url": "/beta/wallet_agreement/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
+                    "url": "/wallet_agreement/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
                     "json": {
                         "user_id":"{{ CallerId }}",
                         "agreement_id":"{{ agreementId }}",
@@ -78,7 +77,7 @@
             },
             {
                 "post":{
-                    "url": "/beta/wallet_agreement/token",
+                    "url": "/wallet_agreement/token",
                     "headers":{
                         "x-client-id":"{{ ClientId }}"
                     },
