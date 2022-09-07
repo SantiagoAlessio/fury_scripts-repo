@@ -21,7 +21,8 @@
                 "ClientId",
                 "returnUri",
                 "CallerId"
-            ]
+            ],
+            "order":"sequence"
         },
         "processor": "functions.js"
     },
