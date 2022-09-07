@@ -1,0 +1,105 @@
+{
+    "config":{
+        "target": "http://beta.wallet-agreement-manager.melifrontends.com",
+        "tls": {
+            "rejectUnauthorized": false
+        },
+        "http": {
+            "pool": 1200,
+            "timeout": 1000
+        },
+        "phases": [
+            {
+                "name": "first step",
+                "duration": 10,
+                "arrivalRate": 1
+            }
+        ],
+        "payload": 
+        {
+            "path": "./seller.csv",
+            "fields": [
+                "ClientId",
+                "returnUri",
+                "CallerId"
+            ]
+        },
+        "processor": "./functions.js"
+    },
+    "scenarios":[{
+        "name":"flow V1 only AM",
+        "flow":[
+            {
+                "post": {
+                    "url": "/beta/wallet_agreement?client.id={{ ClientId }}",
+                    "json":{
+                        "return_uri":"{{ returnUri }}",
+                        "status":"state"
+                    },
+                    "capture": [
+                        {
+                            "json": "$.id",
+                            "as": "agreementId"
+                        }
+                    ]
+                }
+            },
+            {
+                "get":{
+                    "url": "/beta/wallet_agreement/{{agreementId}}"
+                }
+            },
+            {
+                "put":{
+                    "url": "/beta/wallet_agreement/{{agreementId}}",
+                    "json":{
+                        "status":"WAITING_USER_CONFIRMATION"
+                    }
+                }
+            },
+            {
+                "post":{
+                    "url": "/beta/wallet_agreement/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
+                    "json": {
+                        "user_id":"{{ CallerId }}",
+                        "agreement_id":"{{ agreementId }}",
+                        "payment_preference": {
+                            "active":true,
+                            "payment_method": [
+                                {
+                                    "priority": 1, 
+                                    "payment_method": "account_money" 
+                                }
+                            ]
+                        }
+                    },
+                    "afterResponse": "obtainCode"
+                }
+            },
+            {
+                "post":{
+                    "url": "/beta/wallet_agreement/token",
+                    "headers":{
+                        "x-client-id":"{{ ClientId }}"
+                    },
+                    "json": {
+                        "client_secret":"{{ agreementId }}",
+                        "code":"{{ validationCode }}",
+                        "return_uri":"{{ returnUri }}",
+                        "grant_type":"authorization_code" 
+                    },
+                    "capture": [
+                        {
+                            "json": "$.payer_token",
+                            "as": "payerToken"
+                        }
+                    ]
+                }
+            },
+            {
+                "log":"agreement obtenido {{agreementId}} y codigo obtenido {{ validationCode }} y payer token {{ payerToken }}"
+            }
+        ]
+    }
+    ]
+}
