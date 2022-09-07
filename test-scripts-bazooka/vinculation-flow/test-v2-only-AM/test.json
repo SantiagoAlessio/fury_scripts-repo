@@ -23,7 +23,7 @@
                 "CallerId"
             ]
         },
-        "processor": "./functions.js"
+        "processor": "functions.js"
     },
     "scenarios":[{
         "name":"flow V2 only AM",
