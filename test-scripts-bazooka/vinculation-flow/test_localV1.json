@@ -20,7 +20,8 @@
             "fields": [
                 "ClientId",
                 "returnUri",
-                "CallerId"
+                "CallerId",
+                "CollId"
             ],
             "order":"sequence"
         },
@@ -59,6 +60,17 @@
             },
             {
                 "post":{
+                    "url":"/beta/wallet_agreement/verify/card?client.id={{ ClientId }}&caller.id={{ CallerId }}&collector.id={{ CollId }}&agreement_id={{ agreementId }}&site_id=MLA",
+                    "json": {
+                        "token": "234c1c2e4229a20e9c4261159799997e",
+                        "issuer_id": 3,
+                        "payment_method_id": "master",
+                        "installments": 1
+                    }
+                }
+            },
+            {
+                "post":{
                     "url": "/beta/wallet_agreement/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
                     "json": {
                         "user_id":"{{ CallerId }}",
@@ -69,6 +81,10 @@
                                 {
                                     "priority": 1, 
                                     "payment_method": "account_money" 
+                                },
+                                {
+                                    "priority": 2,
+                                    "payment_method": "card"
                                 }
                             ]
                         }

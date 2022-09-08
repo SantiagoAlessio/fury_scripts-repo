@@ -1,6 +1,6 @@
 {
     "config":{
-        "target": "https://internal-api.mercadopago.com",
+        "target": "http://beta.wallet-agreement-manager.melifrontends.com",
         "tls": {
             "rejectUnauthorized": false
         },
@@ -10,8 +10,8 @@
         "phases": [
             {
                 "name": "first step",
-                "duration": 5,
-                "arrivalRate": 20
+                "duration": 10,
+                "arrivalRate": 1
             }
         ],
         "payload": 
@@ -20,28 +20,26 @@
             "fields": [
                 "ClientId",
                 "returnUri",
-                "CallerId"
+                "CallerId",
+                "CallId"
             ],
             "order":"sequence"
         },
-        "processor": "./functions.js"
+        "processor": "functions.js"
     },
     "scenarios":[{
-        "name":"flow v2 only AM",
+        "name":"flow V1 only AM",
         "flow":[
             {
                 "post": {
-                    "url": "/beta/v2/wallet_connect/agreements?client.id={{ ClientId }}",
+                    "url": "/wallet_agreement?client.id={{ ClientId }}",
                     "json":{
                         "return_uri":"{{ returnUri }}",
-                        "external_flow_id":"EXTERNAL_FLOW_ID",
-                        "external_user":{
-                            "id":"TETE69236"
-                        }
+                        "status":"state"
                     },
                     "capture": [
                         {
-                            "json": "$.agreement_id",
+                            "json": "$.id",
                             "as": "agreementId"
                         }
                     ]
@@ -49,12 +47,12 @@
             },
             {
                 "get":{
-                    "url": "/beta/v2/wallet_connect/agreements/{{agreementId}}?client.id={{ ClientId }}"
+                    "url": "/wallet_agreement/{{agreementId}}"
                 }
             },
             {
-                "patch":{
-                    "url": "/beta/v2/wallet_connect/agreements/{{agreementId}}?client.id={{ ClientId }}",
+                "put":{
+                    "url": "/wallet_agreement/{{agreementId}}",
                     "json":{
                         "status":"WAITING_USER_CONFIRMATION"
                     }
@@ -62,16 +60,31 @@
             },
             {
                 "post":{
-                    "url": "/beta/v2/wallet_connect/agreements/{{agreementId}}/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
+                    "url":"/wallet_agreement/verify/card?client.id={{ ClientId }}&caller.id={{ CallerId }}&collector.id={{ CollId }}&agreement_id={{ agreementId }}&site_id=MLA",
                     "json": {
-                        "userId":"{{ CallerId }}",
+                        "token": "234c1c2e4229a20e9c4261159799997e",
+                        "issuer_id": 3,
+                        "payment_method_id": "master",
+                        "installments": 1
+                    }
+                }
+            },
+            {
+                "post":{
+                    "url": "/wallet_agreement/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
+                    "json": {
+                        "user_id":"{{ CallerId }}",
+                        "agreement_id":"{{ agreementId }}",
                         "payment_preference": {
                             "active":true,
-                            "user_id": "{{ CallerId }}",
                             "payment_method": [
                                 {
                                     "priority": 1, 
                                     "payment_method": "account_money" 
+                                },
+                                {
+                                    "priority": 2,
+                                    "payment_method": "card"
                                 }
                             ]
                         }
@@ -81,9 +94,15 @@
             },
             {
                 "post":{
-                    "url": "/beta/v2/wallet_connect/agreements/{{agreementId}}/payer_token?client.id={{ ClientId }}",
+                    "url": "/wallet_agreement/token",
+                    "headers":{
+                        "x-client-id":"{{ ClientId }}"
+                    },
                     "json": {
-                        "code": "{{ validationCode }}"
+                        "client_secret":"{{ agreementId }}",
+                        "code":"{{ validationCode }}",
+                        "return_uri":"{{ returnUri }}",
+                        "grant_type":"authorization_code" 
                     },
                     "capture": [
                         {
@@ -91,11 +110,6 @@
                             "as": "payerToken"
                         }
                     ]
-                }
-            },
-            {
-                "delete":{
-                    "url": "/beta/v2/wallet_connect/agreements/{{agreementId}}?client.id={{ ClientId }}"
                 }
             },
             {

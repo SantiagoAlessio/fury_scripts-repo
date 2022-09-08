@@ -16,7 +16,7 @@
         ],
         "payload": 
         {
-            "path": "./seller.csv",
+            "path": "seller.csv",
             "fields": [
                 "ClientId",
                 "returnUri",
@@ -27,18 +27,21 @@
         "processor": "functions.js"
     },
     "scenarios":[{
-        "name":"flow V2 only AM",
+        "name":"flow v2 only AM",
         "flow":[
             {
                 "post": {
-                    "url": "/wallet_agreement?client.id={{ ClientId }}",
+                    "url": "/v2/wallet_connect/agreements?client.id={{ ClientId }}",
                     "json":{
                         "return_uri":"{{ returnUri }}",
-                        "status":"state"
+                        "external_flow_id":"EXTERNAL_FLOW_ID",
+                        "external_user":{
+                            "id":"TETE69236"
+                        }
                     },
                     "capture": [
                         {
-                            "json": "$.id",
+                            "json": "$.agreement_id",
                             "as": "agreementId"
                         }
                     ]
@@ -46,12 +49,12 @@
             },
             {
                 "get":{
-                    "url": "/wallet_agreement/{{agreementId}}"
+                    "url": "/v2/wallet_connect/agreements/{{agreementId}}?client.id={{ ClientId }}"
                 }
             },
             {
-                "put":{
-                    "url": "/wallet_agreement/{{agreementId}}",
+                "patch":{
+                    "url": "/v2/wallet_connect/agreements/{{agreementId}}?client.id={{ ClientId }}",
                     "json":{
                         "status":"WAITING_USER_CONFIRMATION"
                     }
@@ -59,12 +62,12 @@
             },
             {
                 "post":{
-                    "url": "/wallet_agreement/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
+                    "url": "/v2/wallet_connect/agreements/{{agreementId}}/code?client.id={{ ClientId }}&caller.id={{ CallerId }}",
                     "json": {
-                        "user_id":"{{ CallerId }}",
-                        "agreement_id":"{{ agreementId }}",
+                        "userId":"{{ CallerId }}",
                         "payment_preference": {
                             "active":true,
+                            "user_id": "{{ CallerId }}",
                             "payment_method": [
                                 {
                                     "priority": 1, 
@@ -78,15 +81,9 @@
             },
             {
                 "post":{
-                    "url": "/wallet_agreement/token",
-                    "headers":{
-                        "x-client-id":"{{ ClientId }}"
-                    },
+                    "url": "/v2/wallet_connect/agreements/{{agreementId}}/payer_token?client.id={{ ClientId }}",
                     "json": {
-                        "client_secret":"{{ agreementId }}",
-                        "code":"{{ validationCode }}",
-                        "return_uri":"{{ returnUri }}",
-                        "grant_type":"authorization_code" 
+                        "code": "{{ validationCode }}"
                     },
                     "capture": [
                         {
@@ -97,7 +94,12 @@
                 }
             },
             {
-                "log":"agreement obtenido {{agreementId}} y codigo obtenido {{ validationCode }} y payer token {{ payerToken }}"
+                "delete":{
+                    "url": "/v2/wallet_connect/agreements/{{agreementId}}?client.id={{ ClientId }}"
+                }
+            },
+            {
+                "log":"para user {{ CallerId }} agreement obtenido {{agreementId}} y payer token {{ payerToken }}"
             }
         ]
     }
