@@ -11,17 +11,18 @@
             {
                 "name": "first step",
                 "duration": 10,
-                "arrivalRate": 1
+                "arrivalRate": 10
             }
         ],
         "payload": 
         {
-            "path": "seller.csv",
+            "path": "sellerWithCard.csv",
             "fields": [
                 "ClientId",
                 "returnUri",
                 "CallerId",
-                "CollId"
+                "CollId",
+                "PublicKey"
             ],
             "order":"sequence"
         },
@@ -37,6 +38,7 @@
                         "return_uri":"{{ returnUri }}",
                         "status":"state"
                     },
+                    "afterResponse":"debugResponse",
                     "capture": [
                         {
                             "json": "$.id",
@@ -60,13 +62,40 @@
             },
             {
                 "post":{
+                    "url":"https://api.mercadopago.com/v1/card_tokens?public_key= {{ PublicKey }}",
+                    "json": {
+                        "card_number":"5031755734530604",
+                        "security_code": "123",
+                        "expiration_month":11,
+                        "expiration_year":2025,
+                        "site_id":"MLA",
+                        "cardholder": {
+                            "name":"apro",
+                            "identification": {
+                                "type":"DNI",
+                                "number":"11111111"
+                            }
+                        }
+                    },
+                    "afterResponse":"debugResponse",
+                    "capture":[
+                        {
+                            "json": "$.id",
+                            "as": "CardToken"
+                        }
+                    ]
+                }
+            },
+            {
+                "post":{
                     "url":"/beta/wallet_agreement/verify/card?client.id={{ ClientId }}&caller.id={{ CallerId }}&collector.id={{ CollId }}&agreement_id={{ agreementId }}&site_id=MLA",
                     "json": {
-                        "token": "234c1c2e4229a20e9c4261159799997e",
+                        "token": "{{ CardToken }}",
                         "issuer_id": 3,
                         "payment_method_id": "master",
                         "installments": 1
-                    }
+                    },
+                    "afterResponse":"debugResponse"
                 }
             },
             {
