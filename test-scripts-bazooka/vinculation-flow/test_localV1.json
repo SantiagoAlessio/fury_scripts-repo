@@ -18,15 +18,15 @@
         {
             "path": "sellerWithCard.csv",
             "fields": [
+                "CardToken",
                 "ClientId",
                 "returnUri",
                 "CallerId",
-                "CollId",
-                "PublicKey"
+                "CollId"
             ],
             "order":"sequence"
         },
-        "processor": "./functions.js"
+        "processor": "functions.js"
     },
     "scenarios":[{
         "name":"flow V1 only AM",
@@ -58,32 +58,6 @@
                     "json":{
                         "status":"WAITING_USER_CONFIRMATION"
                     }
-                }
-            },
-            {
-                "post":{
-                    "url":"https://api.mercadopago.com/v1/card_tokens?public_key= {{ PublicKey }}",
-                    "json": {
-                        "card_number":"5031755734530604",
-                        "security_code": "123",
-                        "expiration_month":11,
-                        "expiration_year":2025,
-                        "site_id":"MLA",
-                        "cardholder": {
-                            "name":"apro",
-                            "identification": {
-                                "type":"DNI",
-                                "number":"11111111"
-                            }
-                        }
-                    },
-                    "afterResponse":"debugResponse",
-                    "capture":[
-                        {
-                            "json": "$.id",
-                            "as": "CardToken"
-                        }
-                    ]
                 }
             },
             {
@@ -143,8 +117,6 @@
             },
             {
                 "log":"para user {{ CallerId }} agreement obtenido {{agreementId}} y payer token {{ payerToken }}"
-            }
-        ]
-    }
-    ]
+            }]
+    }]
 }

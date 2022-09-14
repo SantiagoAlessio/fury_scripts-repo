@@ -11,12 +11,12 @@
             {
                 "name": "first step",
                 "duration": 60,
-                "arrivalCount": 1
+                "arrivalRate": 1
             },
             {
                 "name":"second step",
                 "duration": 60,
-                "arrivalCount": 2
+                "arrivalRate": 2
             }
         ],
         "payload": 
@@ -45,8 +45,7 @@
                         {
                             "json": "$.id",
                             "as": "agreementId"
-                        }
-                    ]
+                        }]
                 }
             },
             {
@@ -97,14 +96,11 @@
                         {
                             "json": "$.payer_token",
                             "as": "payerToken"
-                        }
-                    ]
+                        }]
                 }
             },
             {
                 "log":"para user {{ CallerId }} agreement obtenido {{agreementId}} y payer token {{ payerToken }}"
-            }
-        ]
-    }
-    ]
+            }]
+    }]
 }
